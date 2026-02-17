@@ -8,9 +8,9 @@ const ubicationAPI = new UbicationAPI();
  * POST /api/ubications
  * Create a new ubication
  */
-router.post('/', (req, res) => {
+router.post('/', async (req, res) => {
     const { code, name } = req.body;
-    const response = ubicationAPI.createUbication(code, name);
+    const response = await ubicationAPI.createUbication(code, name);
     
     res.status(response.status).json(response.data || { error: response.error });
 });
@@ -19,8 +19,8 @@ router.post('/', (req, res) => {
  * GET /api/ubications
  * Get all ubications
  */
-router.get('/', (req, res) => {
-    const response = ubicationAPI.getAllUbications();
+router.get('/', async (req, res) => {
+    const response = await ubicationAPI.getAllUbications();
     res.status(response.status).json(response.data);
 });
 
@@ -28,9 +28,9 @@ router.get('/', (req, res) => {
  * GET /api/ubications/:code
  * Get ubication by code
  */
-router.get('/:code', (req, res) => {
+router.get('/:code', async (req, res) => {
     const { code } = req.params;
-    const response = ubicationAPI.getUbicationByCode(code);
+    const response = await ubicationAPI.getUbicationByCode(code);
     
     res.status(response.status).json(response.data || { error: response.error });
 });

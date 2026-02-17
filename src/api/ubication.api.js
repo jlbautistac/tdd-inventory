@@ -5,9 +5,9 @@ class UbicationAPI {
         this.ubicationService = new UbicationService();
     }
 
-    createUbication(code, name) {
+    async createUbication(code, name) {
         try {
-            const ubication = this.ubicationService.createUbication(code, name);
+            const ubication = await this.ubicationService.createUbication(code, name);
             return {
                 status: 201,
                 data: {
@@ -37,8 +37,8 @@ class UbicationAPI {
         }
     }
 
-    getAllUbications() {
-        const ubications = this.ubicationService.getAllUbications();
+    async getAllUbications() {
+        const ubications = await this.ubicationService.getAllUbications();
         return {
             status: 200,
             data: ubications.map(ub => ({
@@ -48,7 +48,7 @@ class UbicationAPI {
         };
     }
 
-    getUbicationByCode(code) {
+    async getUbicationByCode(code) {
         if (!code) {
             return {
                 status: 400,
@@ -56,7 +56,7 @@ class UbicationAPI {
             };
         }
 
-        const ubication = this.ubicationService.getUbicationByCode(code);
+        const ubication = await this.ubicationService.getUbicationByCode(code);
         
         if (!ubication) {
             return {
