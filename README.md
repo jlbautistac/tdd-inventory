@@ -1,6 +1,17 @@
 # tdd-inventory
 Test Drive Development (TDD) Inventory Practice
 
+## Technologies
+
+- **Node.js** - JavaScript runtime
+- **Express.js** - Web application framework
+- **PostgreSQL** - Relational database
+- **pg** - PostgreSQL client for Node.js
+- **dotenv** - Environment variables management
+- **Jest** - Testing framework
+
+---
+
 ## Fork and Install
 
 ### 1) Fork the repository on GitHub
@@ -36,13 +47,122 @@ cd tdd-inventory
 npm install
 ```
 
-### 5) Run tests
+### 5) Configure PostgreSQL Database
+
+#### 5.1) Create the database
+
+Make sure PostgreSQL is installed and running on your system. Then create a database:
+
+```bash
+psql -U postgres
+CREATE DATABASE tdd_inventory;
+\q
+```
+
+#### 5.2) Configure environment variables
+
+Copy the `.env.example` file to `.env`:
+
+```bash
+cp .env.example .env
+```
+
+Edit the `.env` file with your PostgreSQL credentials:
+
+```env
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=tdd_inventory
+DB_USER=postgres
+DB_PASSWORD=your_password
+```
+
+#### 5.3) Initialize the database schema
+
+Run the initialization script to create the required tables:
+
+```bash
+npm run init-db
+```
+
+**Note:** The init script will automatically create the database if it doesn't exist, so you can skip step 5.1 if you prefer.
+
+---
+
+## Database Configuration
+
+### Connection Pool
+
+The application uses a PostgreSQL connection pool (`pg` library) to efficiently manage database connections. The pool configuration is located in [src/config/database.js](src/config/database.js).
+
+**Features:**
+- Automatically handles connection creation and reuse
+- Manages connection limits
+- Handles reconnection on errors
+- Cleans up idle connections
+
+### Environment Variables
+
+The database connection requires the following environment variables (defined in `.env`):
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_HOST` | PostgreSQL host | localhost |
+| `DB_PORT` | PostgreSQL port | 5432 |
+| `DB_NAME` | Database name | tdd_inventory |
+| `DB_USER` | Database user | postgres |
+| `DB_PASSWORD` | Database password | - |
+
+### Database Schema
+
+**Table: `ubications`**
+
+| Column | Type | Constraints |
+|--------|------|-------------|
+| `id` | SERIAL | PRIMARY KEY |
+| `code` | VARCHAR(50) | UNIQUE NOT NULL |
+| `name` | VARCHAR(255) | NOT NULL |
+| `created_at` | TIMESTAMP | DEFAULT CURRENT_TIMESTAMP |
+
+### Database Scripts
+
+Available npm scripts for database management:
+
+```bash
+# Initialize database and create tables
+npm run init-db
+
+# Clean database (drop and recreate tables)
+npm run clean-db
+```
+
+### Usage in Code
+
+```javascript
+const pool = require('./config/database');
+
+// Execute a query
+const result = await pool.query('SELECT * FROM ubications');
+
+// Execute with parameters
+const result = await pool.query('SELECT * FROM ubications WHERE code = $1', ['A-1-1']);
+```
+
+### Error Handling
+
+The database module logs connection events:
+- **On successful connection**: "Connected to PostgreSQL database"
+- **On error**: Logs error details and exits the process
+
+---
+
+### 6) Run tests
 
 ```bash
 npm test
 ```
 
-### 6) Start the server
+### 7) Start the server
 
 ```bash
 npm start
@@ -278,18 +398,27 @@ curl -X POST http://localhost:3000/api/ubications \
 ```
 tdd-inventory/
 ├── src/
-│   ├── Ubication.js                    # Domain model
+│   ├── ubication.js                    # Domain model
+│   ├── config/
+│   │   └── database.js                 # PostgreSQL connection pool
 │   ├── api/
 │   │   ├── ubication.api.js            # API layer
 │   │   └── routes/
 │   │       └── ubication.routes.js     # Express routes
 │   ├── services/
-│   │   └── ubication.service.js        # Business logic
+│   │   ├── ubication.service.js        # Business logic
+│   │   └── database/
+│   │       ├── initDatabase.js         # Database initialization script
+│   │       └── cleanDatabase.js        # Database cleanup script
 │   └── server.js                       # Express server
 ├── tests/
 │   ├── ubication.test.js               # Domain tests
 │   ├── ubication.service.test.js       # Service tests
-│   └── ubication.api.test.js           # API tests
+│   ├── ubication.api.test.js           # API tests
+│   └── helpers/
+│       └── testHelper.js               # Test utilities
+├── .env                                # Environment variables (not in repo)
+├── .env.example                        # Environment variables template
 ├── package.json
 └── README.md
 ```
@@ -300,13 +429,25 @@ tdd-inventory/
 
 The project includes comprehensive tests following TDD methodology:
 
-- **Domain Tests** - Ubication model validation
-- **Service Tests** - Business logic and data management
-- **API Tests** - REST API endpoints behavior
+- **Domain Tests** ([tests/ubication.test.js](tests/ubication.test.js)) - Ubication model validation
+- **Service Tests** ([tests/ubication.service.test.js](tests/ubication.service.test.js)) - Business logic and PostgreSQL integration
+- **API Tests** ([tests/ubication.api.test.js](tests/ubication.api.test.js)) - REST API endpoints behavior
+
+### Test Helpers
+
+The test suite includes helper utilities ([tests/helpers/testHelper.js](tests/helpers/testHelper.js)) for:
+- Database cleanup between tests
+- Connection pool management
+- Test isolation
 
 Run all tests:
 ```bash
 npm test
+```
+
+Run tests with verbose output:
+```bash
+npm test -- --verbose
 ```
 
 Total test suite: **17 tests** covering all layers (Domain, Service, API)
